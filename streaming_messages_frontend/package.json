@@ -10,7 +10,7 @@
     "format": "prettier --config .prettierrc --write \"src\""
   },
   "dependencies": {
-    "@langchain/langgraph-sdk": "^0.0.8",
+    "@langchain/langgraph-sdk": "^0.0.52",
     "js-cookie": "^3.0.5",
     "next": "14.2.7",
     "react": "^18",
