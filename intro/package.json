@@ -14,10 +14,10 @@
   "author": "Brace Sproul",
   "license": "MIT",
   "dependencies": {
-    "@langchain/community": "^0.2.31",
-    "@langchain/core": "^0.2.31",
-    "@langchain/langgraph": "^0.2.1",
-    "@langchain/openai": "^0.2.8",
+    "@langchain/community": "^0.3.34",
+    "@langchain/core": "^0.3.42",
+    "@langchain/langgraph": "^0.2.54",
+    "@langchain/openai": "^0.4.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
