@@ -6,15 +6,9 @@ export const handleStreamEvent = (
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
   streamMode: StreamMode
 ) => {
-  if (streamMode === "messages") {
-    handleStreamMessageEvent(event, setMessages);
-  } else if (streamMode === "events") {
-    handleStreamEventEvent(event, setMessages);
-  } else if (streamMode === "updates") {
-    handleStreamUpdatesEvent(event, setMessages);
-  } else if (streamMode === "values") {
-    handleStreamValuesEvent(event, setMessages);
-  }
+  console.log('handleStreamEvent', event);
+
+  handleStreamEventEvent(event, setMessages);
 };
 
 const handleStreamMessageEvent = (
@@ -168,46 +162,16 @@ const handleStreamEventEvent = (
   event: any,
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) => {
-  if (event.event !== "events") return;
+  
   const data = event.data;
-  setMessages((prevMessages) => {
-    return [
-      ...prevMessages,
-      { rawResponse: data, sender: "ai", id: data.run_id },
-    ];
-  });
-};
 
-const handleStreamUpdatesEvent = (
-  event: any,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
-) => {
-  if (event.event !== "updates") {
-    // Not an update, return
-    return;
-  }
-  const data = event.data;
-  setMessages((prevMessages) => {
-    return [
-      ...prevMessages,
-      { rawResponse: data, sender: "ai", id: data.run_id },
-    ];
-  });
-};
+  if(event.data){
 
-const handleStreamValuesEvent = (
-  event: any,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
-) => {
-  if (event.event !== "values") {
-    // Not an update, return
-    return;
+    setMessages((prevMessages) => {
+      return [
+        ...prevMessages,
+        { rawResponse: data, sender: "ai", id: data.run_id },
+      ];
+    });
   }
-  const data = event.data;
-  setMessages((prevMessages) => {
-    return [
-      ...prevMessages,
-      { rawResponse: data, sender: "ai", id: data.run_id },
-    ];
-  });
 };

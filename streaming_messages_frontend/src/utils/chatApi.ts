@@ -1,28 +1,23 @@
 import { StreamMode } from "@/components/Settings";
-import { ThreadState, Client } from "@langchain/langgraph-sdk";
+import { StreamEvent, StreamMessage } from "@/lib/langgraph/types";
+import { useClient } from "@/lib/langgraph/useClient";
 
-const createClient = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
-  return new Client({
-    apiUrl,
-  });
-};
+const API_URL = 'http://localhost:8001';
+const client = useClient({ url: API_URL });
 
-export const createAssistant = async (graphId: string) => {
-  const client = createClient();
-  return client.assistants.create({ graphId });
-};
-
-export const createThread = async () => {
-  const client = createClient();
-  return client.threads.create();
-};
+const activeEntity = {
+  id: '67432ccd724fe0cc3b97d04b',
+  type: 'restaurant',
+}
 
 export const getThreadState = async (
   threadId: string
-): Promise<ThreadState<Record<string, any>>> => {
-  const client = createClient();
-  return client.threads.getState(threadId);
+): Promise<Array<Record<string, any>>> => {
+  const data = await fetch(`http://localhost:8001/threads/${threadId}`);
+  const state = await data.json();
+  console.log('state', state);
+
+  return state;
 };
 
 export const updateState = async (
@@ -32,16 +27,15 @@ export const updateState = async (
     asNode?: string;
   }
 ) => {
-  const client = createClient();
-  return client.threads.updateState(threadId, {
-    values: fields.newState,
-    asNode: fields.asNode,
-  });
+
+  // return client.threads.updateState(threadId, {
+  //   values: fields.newState,
+  //   asNode: fields.asNode,
+  // });
 };
 
 export const sendMessage = async (params: {
   threadId: string;
-  assistantId: string;
   messageId: string;
   message: string | null;
   model: string;
@@ -49,31 +43,21 @@ export const sendMessage = async (params: {
   systemInstructions: string;
   streamMode: StreamMode;
 }) => {
-  const client = createClient();
 
-  let input: Record<string, any> | null = null;
-  if (params.message !== null) {
-    input = {
-      messages: [
-        {
-          id: params.messageId,
-          role: "human",
-          content: params.message,
-        },
-      ],
-      userId: params.userId,
-    };
+  const newHumanMessage: StreamMessage = {
+      id: params.messageId,
+      type: "human",
+      content: params.message ?? '',
   }
-  const config = {
-    configurable: {
-      model_name: params.model,
-      system_instructions: params.systemInstructions,
-    },
-  };
-
-  return client.runs.stream(params.threadId, params.assistantId, {
-    input,
-    config,
-    streamMode: params.streamMode,
+    
+  const stream: AsyncGenerator<StreamEvent> = client.streamEvents({
+    messages: [newHumanMessage],
+    user_id: params.userId,
+    session_id: params.threadId,
+    merchant_id: activeEntity.id,
+    merchant_type: activeEntity.type,
   });
+
+  return stream;
 };
+

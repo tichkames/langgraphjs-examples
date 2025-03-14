@@ -9,8 +9,6 @@ import Settings, { StreamMode } from "./Settings";
 import { Message, Model } from "../types";
 import { handleStreamEvent } from "../utils/streamHandler";
 import {
-  createAssistant,
-  createThread,
   getThreadState,
   sendMessage,
 } from "../utils/chatApi";
@@ -22,7 +20,6 @@ import { GraphInterrupt } from "./Interrupted";
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
-  const [assistantId, setAssistantId] = useState<string | null>(null);
   const [model, setModel] = useState<Model>("gpt-4o-mini" as Model);
   const [streamMode, setStreamMode] = useState<StreamMode>("messages");
   const [userId, setUserId] = useState<string>("");
@@ -37,19 +34,8 @@ export default function ChatInterface() {
 
   useEffect(() => {
     const initializeChat = async () => {
-      let assistantId = getCookie(ASSISTANT_ID_COOKIE);
-      if (!assistantId) {
-        const assistant = await createAssistant(
-          process.env.NEXT_PUBLIC_LANGGRAPH_GRAPH_ID as string
-        );
-        assistantId = assistant.assistant_id as string;
-        setCookie(ASSISTANT_ID_COOKIE, assistantId);
-        setAssistantId(assistantId);
-      }
-
-      const { thread_id } = await createThread();
+      const thread_id = uuidv4();
       setThreadId(thread_id);
-      setAssistantId(assistantId);
       setUserId(uuidv4());
     };
 
@@ -75,19 +61,20 @@ export default function ChatInterface() {
       console.error("Thread ID is not available");
       return;
     }
-    if (!assistantId) {
-      console.error("Assistant ID is not available");
-      return;
-    }
 
     try {
       setIsLoading(true);
       setThreadState(undefined);
       setGraphInterrupted(false);
       setAllowNullMessage(false);
-      const response = await sendMessage({
+
+      if (!message) {
+        console.error('No message provided');
+        return;
+      }
+
+      const stream = await sendMessage({
         threadId,
-        assistantId,
         message,
         messageId,
         model,
@@ -96,16 +83,31 @@ export default function ChatInterface() {
         streamMode,
       });
 
-      for await (const chunk of response) {
-        handleStreamEvent(chunk, setMessages, streamMode);
+
+      for await (const event of stream) {
+        const eventType = String(event.event);
+  
+        // const handler = eventHandlers[eventType];
+        // if (handler) {
+        //   handler(event);
+        // }
+
+        handleStreamEvent(event, setMessages, streamMode);
       }
 
       // Fetch the current state of the thread
-      const currentState = await getThreadState(threadId);
-      setThreadState(currentState);
-      if (currentState.next.length) {
-        setGraphInterrupted(true);
-      }
+      // const currentState = await getThreadState(threadId);
+
+      // console.dir(
+      //   currentState,
+      //   { depth: 3 }
+      // );
+
+      // setThreadState(currentState);
+      // if (currentState.next.length) {
+      //   setGraphInterrupted(true);
+      // }
+
       setIsLoading(false);
     } catch (error) {
       console.error("Error streaming messages:", error);

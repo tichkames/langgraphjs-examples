@@ -9,6 +9,7 @@
     "start:messages": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_messages.ts",
     "start:updates": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_updates.ts",
     "start:values": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_values.ts",
+    "start:stream": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_chat.ts",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "format": "prettier --write \"**/*.ts\"",
